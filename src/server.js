@@ -1,6 +1,7 @@
 import express from "express"; // express로 하는 일
 import http from "http"; // ws를 사용하기 위함
-import WebSocket from "ws";
+// import WebSocket from "ws";
+import SocketIO from "socket.io";
 
 const PORT = 3000;
 const app = express(); // express application 구성
@@ -19,8 +20,28 @@ const handleListen = () => console.log(`Listening on http://localhost:${PORT}`);
 
 // ws를 사용하기 위해서 http 서버에 websocker server 둘다 연결
 const server = http.createServer(app); // express app을 받아온다. 서버가 만들어짐
-const wss = new WebSocket.Server({server}); // wss 연결하면 ws://localhost:${PORT}도 가능
+// const wss = new WebSocket.Server({server}); // wss 연결하면 ws://localhost:${PORT}도 가능
+const sio = SocketIO(server);
+sio.on("connection", (socket) => {
+  socket["nickname"] = "Anonymous";
+  socket.on("enter_room", (room, done) => {
+    socket.join(room);
+    done();
+    socket.to(room).emit("welcome", socket.nickname);
+  });
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname));
+  });
+  socket.on("new_message", (msg, room, done) => {
+    socket.to(room).emit("new_message", msg, socket.nickname);
+    done();
+  });
+  socket.on("nickname", (nick) => {
+    socket["nickname"] = nick;
+  })
+});
 
+/* the code when we use WebSocket
 // fake database for checking a connection with several browers.
 const sockets = [];
 
@@ -43,6 +64,9 @@ wss.on("connection", (socket) => { // Listening for a event
     }
   });
 });
+*/
+
+
 
 // http protocol과 websocket protocol 모두 공유
 server.listen(PORT, handleListen);

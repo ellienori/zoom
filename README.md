@@ -49,3 +49,14 @@ Zoom clone using NodeJS, WebRTC and Websockets.
 - npmjs.com/package/ws
 - express는 http를 다루지. (http://localhost:PORT로 하잖아 우리가) 그런데 ws는 WebSocket임. 프로토콜이 다르다!
 - 그래서 server.js에서 express도 쓰고 ws도 쓰는거지 두 개를 쓰는 거야 서로 대체하는 게 아니라
+
+# #2 Socket IO
+
+## Socket IO
+
+위에서 설명한 ws는 기능 하나하나를 다 구현해야 해서 힘들어. 그래서 우리는 framework를 쓸거야.
+
+## Adapter
+
+- 다른 서버들 사이에 실시간 어플리케이션을 동기화하는 일
+- 우리 코드에서 서버 메모리에 저장하는 거지 디비를 쓰고 있지 않아서 껐다 키면 다 사라져있음 (room, nickname 이런 거)
