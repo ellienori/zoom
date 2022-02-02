@@ -22,15 +22,40 @@ const handleListen = () => console.log(`Listening on http://localhost:${PORT}`);
 const server = http.createServer(app); // express app을 받아온다. 서버가 만들어짐
 // const wss = new WebSocket.Server({server}); // wss 연결하면 ws://localhost:${PORT}도 가능
 const sio = SocketIO(server);
+
+function publicRooms() {
+  const {sockets: {adapter: {sids, rooms}}} = sio;
+  // const sids = sio.sockets.adapter.sids;
+  // const rooms = sio.sockets.adapter.rooms;
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if ( !sids.get(key) ) { // === undefined
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
+function countRoom(roomName) {
+  return sio.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 sio.on("connection", (socket) => {
   socket["nickname"] = "Anonymous";
+  socket.onAny((event) => {
+    console.log(`Socket Event: ${event}`);
+  });
   socket.on("enter_room", (room, done) => {
     socket.join(room);
     done();
-    socket.to(room).emit("welcome", socket.nickname);
+    socket.to(room).emit("welcome", socket.nickname, countRoom(room));
+    sio.sockets.emit("room_change", publicRooms());
   });
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname));
+    socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname, countRoom(room)-1));
+  });
+  socket.on("disconnect", () => {
+    sio.sockets.emit("room_change", publicRooms());
   });
   socket.on("new_message", (msg, room, done) => {
     socket.to(room).emit("new_message", msg, socket.nickname);

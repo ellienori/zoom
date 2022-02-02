@@ -60,17 +60,36 @@ function handleRoomSubmit(event) {
 welcomeForm.addEventListener("submit", handleRoomSubmit);
 
 
-socket.on("welcome", (user) => {
+socket.on("welcome", (user, count) => {
+  const h3 = room.querySelector("h3");
+  h3.innerText = `Room: ${roomName} (${count})`;
   addMessage(`🔔 ${user} joined!`);
 });
 
-socket.on("bye", (user) => {
+socket.on("bye", (user, count) => {
+  const h3 = room.querySelector("h3");
+  h3.innerText = `Room: ${roomName} (${count})`;
   addMessage(`🔔 ${user} left!`);
 });
 
 socket.on("new_message", (msg, user) => {
   addMessage((`${user}: ${msg}`));
-})
+});
+
+socket.on("room_change", (rooms) => {
+  const roomList = welcome.querySelector("ul");
+  roomList.innerHTML = "";
+
+  if(rooms.length === 0) {
+    return;
+  }
+  
+  rooms.forEach((room) => {
+    const li = document.createElement("li");
+    li.innerText = room;
+    roomList.append(li);
+  });
+});
 
 /* the code when we use WebSocket
 const socket = new WebSocket(`ws://${window.location.host}`);
