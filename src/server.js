@@ -1,7 +1,8 @@
 import express from "express"; // express로 하는 일
 import http from "http"; // ws를 사용하기 위함
 // import WebSocket from "ws";
-import SocketIO from "socket.io";
+const { Server } = require("socket.io");
+const { instrument } = require("@socket.io/admin-ui");
 
 const PORT = 3000;
 const app = express(); // express application 구성
@@ -21,7 +22,16 @@ const handleListen = () => console.log(`Listening on http://localhost:${PORT}`);
 // ws를 사용하기 위해서 http 서버에 websocker server 둘다 연결
 const server = http.createServer(app); // express app을 받아온다. 서버가 만들어짐
 // const wss = new WebSocket.Server({server}); // wss 연결하면 ws://localhost:${PORT}도 가능
-const sio = SocketIO(server);
+const sio = new Server(server, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(sio, {
+  auth: false
+});
 
 function publicRooms() {
   const {sockets: {adapter: {sids, rooms}}} = sio;
